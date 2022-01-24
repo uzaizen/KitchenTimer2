@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">キッチンタイマー</string>
+    <string name="menu_list_option_chori">調理</string>
+    <string name="menu_list_option_seika">製菓</string>
+</resources>
