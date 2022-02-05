@@ -122,7 +122,9 @@ class MenuSelectionActivity : AppCompatActivity() {
 
             val item = parent.getItemAtPosition(position) as MutableMap<String, Any>
             val menuName = item["name"] as String
-            val menuTime = item["time"] as Int * 60  //minutes to second
+            var menuTime = item["time"] as Int * 60  //minutes to second
+
+            menuTime = 10 // For Debug
 
             val intent = Intent()
             intent.putExtra("menu", menuName)

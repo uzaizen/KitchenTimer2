@@ -10,6 +10,17 @@ import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.*
 
+//  Title1   :    タイマーのタイトル（料理名）
+// TimerTime1:    タイマー設定時間
+// Count_Down_Button1 :  ビープ音終了ボタン
+// Count_Down_Button2 :  タイマー停止
+// Count_Down_Button3:  タイマー再開
+// Count_Down_Button4:  タイマー途中終了
+// Count_Label1 :     タイマー残り時間
+
+// timerswitch   :   0:timer is not assigned, other number: timer number, -1:ending during countdown, -2: ending finishing count down
+// timerstopsw :  1: Timer to pause count down, 0: Timer to count down
+
 data class timedata(var hour:Int, var minites:Int, var second:Int)
 
 class MainActivity : AppCompatActivity()  {
@@ -46,7 +57,7 @@ class MainActivity : AppCompatActivity()  {
         Count_Down_Button1.visibility = View.INVISIBLE
         Count_Down_Button2.visibility = View.INVISIBLE
         Count_Down_Button3.visibility = View.INVISIBLE
-
+        Count_Down_Button4.visibility = View.INVISIBLE
     }
 
     inner class TimerCallback3 : TimerTask() {
@@ -57,10 +68,23 @@ class MainActivity : AppCompatActivity()  {
                 if (timerswitch[0] == 1) {
                     if (timerstopsw[0]==0) {timeremaining[0] -= 1}
 
+                    Title1.text = timername[0].toString()
+                    var timet : timedata = timetransfer(timertime[0]!!)
+                    TimerTime1.text = "${timet.hour}:${timet.minites}:${timet.second}"
+                    timet = timetransfer(timeremaining[0])
+                    Count_Label1.text = "${timet.hour}:${timet.minites}:${timet.second}"
+                    Count_Down_Button1.visibility = View.INVISIBLE
+
+                    Title1.visibility=View.VISIBLE
+                    TimerTime1.visibility=View.VISIBLE
+                    Count_Label1.visibility=View.VISIBLE
+
                     Count_Down_Button2.text="停止"
                     Count_Down_Button2.visibility=View.VISIBLE
                     Count_Down_Button3.text="再開"
                     Count_Down_Button3.visibility=View.VISIBLE
+                    Count_Down_Button4.text="終了"
+                    Count_Down_Button4.visibility=View.VISIBLE
 
                     Count_Down_Button2.setOnClickListener{
                         timerstopsw[0] = 1
@@ -70,18 +94,37 @@ class MainActivity : AppCompatActivity()  {
                         timerstopsw[0] = 0
                     }
 
+                    Count_Down_Button4.setOnClickListener{
+                        timerswitch[0] = -1
+                    }
+
                     var timem : timedata = timetransfer(timeremaining[0])
                     Count_Label1.text = "${timem.hour}:${timem.minites}:${timem.second}"
 
                     if (timeremaining[0] == 0) Endingoperation()
                 }
-            })
+                else if (timerswitch[0] == -1) {
+                    Count_Down_Button2.visibility = View.INVISIBLE
+                    Count_Down_Button3.visibility = View.INVISIBLE
+                    Count_Down_Button4.visibility = View.INVISIBLE
+                    Title1.visibility = View.INVISIBLE
+                    TimerTime1.visibility = View.INVISIBLE
+                    Count_Label1.visibility = View.INVISIBLE
+                    timerswitch[0] = 0
+                }
+                else if (timerswitch[0] == -2) {
+                    timerswitch[0] = 0
+                }
+            }
+                )
         }
 
         fun Endingoperation(){
-            timerswitch[0] = -1
+            timerswitch[0] = -2
             Count_Down_Button2.visibility = View.INVISIBLE
             Count_Down_Button3.visibility = View.INVISIBLE
+            Count_Down_Button4.visibility = View.INVISIBLE
+
             Count_Down_Button1.visibility = View.VISIBLE
 
             Count_Down_Button1.text = "終了"
@@ -164,15 +207,6 @@ class MainActivity : AppCompatActivity()  {
 
                 timeremaining[0] = timertime[0]!!
 
-                Title1.text = timername[0].toString()
-
-                var timet : timedata = timetransfer(timertime[0]!!)
-                TimerTime1.text = "${timet.hour}:${timet.minites}:${timet.second}"
-
-                timet = timetransfer(timeremaining[0])
-                Count_Label1.text = "${timet.hour}:${timet.minites}:${timet.second}"
-
-                Count_Down_Button1.visibility = View.INVISIBLE
             }
         }
     }
