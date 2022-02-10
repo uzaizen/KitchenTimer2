@@ -18,12 +18,8 @@ class MenuSelectionActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_menu_selection)
 
-        Log.d("uztest", "menu selection is called")
-
         _menuList = createChoriList()
         val lvMenu = findViewById<ListView>(R.id.lvMenu)
-
-        Log.d("uztets", "menu selection is called 2")
 
         val from = arrayOf("name", "time")
         val to = intArrayOf(android.R.id.text1, android.R.id.text2)
@@ -124,8 +120,6 @@ class MenuSelectionActivity : AppCompatActivity() {
             val menuName = item["name"] as String
             var menuTime = item["time"] as Int * 60  //minutes to second
 
-            menuTime = 10 // For Debug
-
             val intent = Intent()
             intent.putExtra("menu", menuName)
             intent.putExtra("time", menuTime.toString())
@@ -136,5 +130,3 @@ class MenuSelectionActivity : AppCompatActivity() {
     }
 
 }
-
-

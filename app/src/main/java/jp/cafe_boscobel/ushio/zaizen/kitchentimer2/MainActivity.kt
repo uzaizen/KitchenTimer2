@@ -26,7 +26,7 @@ data class timedata(var hour:Int, var minites:Int, var second:Int)
 class MainActivity : AppCompatActivity()  {
 
     val REQUESTCODE = 1
-    var timerswitch = arrayOf<Int>(0,0,0,0,0,0)  //0=Not Assigned, else timer number, -1 means ending operation
+    var timerswitch = arrayOf<Int>(0,0,0,0,0,0)
     var timername = arrayOfNulls<String>(6)
     var timertime = arrayOfNulls<Int>(6)
     var timeremaining = arrayOf<Int>(0,0,0,0,0,0)
@@ -46,8 +46,6 @@ class MainActivity : AppCompatActivity()  {
         mainHandler = Handler(Looper.getMainLooper())
 
         fab.setOnClickListener { view ->
-            Log.d("uztest", "fab click listener")
-
             val intent = Intent(this@MainActivity, MenuSelectionActivity::class.java)
             startActivityForResult(intent, REQUESTCODE)
         }
@@ -155,12 +153,10 @@ class MainActivity : AppCompatActivity()  {
                 Count_Down_Button1.visibility = View.INVISIBLE
                 Count_Label1.text = " "
                 timerswitch[0] = 0
-
             }
 
             Thread.sleep(500)
             soundPool.play(warningSound, 1.0f, 1.0f, 0, -1, 1.0f)
-
         }
 
         }
@@ -174,7 +170,6 @@ class MainActivity : AppCompatActivity()  {
         hh = timesecond / 60 / 60
         mtime = timedata(hh,mm,ss)
         return mtime!! }
-
 
 
     // 戻るボタンの処理
@@ -198,9 +193,6 @@ class MainActivity : AppCompatActivity()  {
                 var recievemenu: String = data!!.getStringExtra("menu")!!
                 var recievetime: String = data!!.getStringExtra("time")!!
 
-                Log.d("uztest", "received menu is " + recievemenu)
-                Log.d("uztest", "recieved time is " + recievetime)
-
                 timerswitch[0] = 1
                 timername[0] = recievemenu.toString()
                 timertime[0] = recievetime.toInt()
@@ -210,15 +202,6 @@ class MainActivity : AppCompatActivity()  {
             }
         }
     }
-
-/*
-    var i:Int =0
-    override fun run(){
-        Log.d("uztest","i=${i}" )
-        i++
-    }
-
- */
 
     override fun onStart(){
         super.onStart()
