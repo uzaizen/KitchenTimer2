@@ -1,22 +1,25 @@
 package jp.cafe_boscobel.ushio.zaizen.kitchentimer2
 import android.content.Intent
+import android.graphics.Color
 import android.media.AudioAttributes
 import android.media.SoundPool
 import android.os.*
 import android.util.Log
 import android.view.MenuItem
 import android.view.View
+import android.widget.Button
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.*
 
-//  Title1   :    タイマーのタイトル（料理名）
-// TimerTime1:    タイマー設定時間
-// Count_Down_Button1 :  ビープ音終了ボタン
-// Count_Down_Button2 :  タイマー停止
-// Count_Down_Button3:  タイマー再開
-// Count_Down_Button4:  タイマー途中終了
-// Count_Label1 :     タイマー残り時間
+//  Title#   :    タイマーのタイトル（料理名）
+// TimerTime#:    タイマー設定時間
+// Count_Down_ButtonA# :  ビープ音終了ボタン
+// Count_Down_ButtonB# :  タイマー停止
+// Count_Down_ButtonC#:  タイマー再開
+// Count_Down_ButtonD#:  タイマー途中終了
+// Count_Label# :     タイマー残り時間
 
 // timerswitch   :   0:timer is not assigned, other number: timer number, -1:ending during countdown, -2: ending finishing count down
 // timerstopsw :  1: Timer to pause count down, 0: Timer to count down
@@ -39,95 +42,136 @@ class MainActivity : AppCompatActivity()  {
     private lateinit var soundPool: SoundPool
     private var warningSound = 0
 
+    lateinit var ButtonA:Array<Button>
+    lateinit var ButtonB: Array<Button>
+    lateinit var ButtonC: Array<Button>
+    lateinit var ButtonD: Array<Button>
+
+    lateinit var TitleN: Array<TextView>
+    lateinit var TimerTimeN: Array<TextView>
+    lateinit var Count_LabelN: Array<TextView>
+
+    var availabeN: Int = 0
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        ButtonA = arrayOf(Count_Down_ButtonA1, Count_Down_ButtonA2, Count_Down_ButtonA3, Count_Down_ButtonA4, Count_Down_ButtonA5, Count_Down_ButtonA6)
+        ButtonB = arrayOf(Count_Down_ButtonB1, Count_Down_ButtonB2, Count_Down_ButtonB3, Count_Down_ButtonB4, Count_Down_ButtonB5, Count_Down_ButtonB6)
+        ButtonC = arrayOf(Count_Down_ButtonC1, Count_Down_ButtonC2, Count_Down_ButtonC3, Count_Down_ButtonC4, Count_Down_ButtonC5, Count_Down_ButtonC6)
+        ButtonD = arrayOf(Count_Down_ButtonD1, Count_Down_ButtonD2, Count_Down_ButtonD3, Count_Down_ButtonD4, Count_Down_ButtonD5, Count_Down_ButtonD6)
+
+        TitleN = arrayOf(Title1, Title2, Title3, Title4, Title5, Title6)
+        TimerTimeN = arrayOf(TimerTime1, TimerTime2, TimerTime3, TimerTime4, TimerTime5, TimerTime6)
+        Count_LabelN = arrayOf(Count_Label1, Count_Label2, Count_Label3, Count_Label4, Count_Label5, Count_Label6)
+
+        Log.d("uztest", "phase 00")
+
         mainHandler = Handler(Looper.getMainLooper())
+
+        Log.d("uztest","phase 0")
 
         fab.setOnClickListener { view ->
             val intent = Intent(this@MainActivity, MenuSelectionActivity::class.java)
             startActivityForResult(intent, REQUESTCODE)
         }
 
-        Timer().scheduleAtFixedRate(TimerCallback3(), 0, 1000)
+        Log.d("uztest", "phase1")
 
-        Count_Down_Button1.visibility = View.INVISIBLE
-        Count_Down_Button2.visibility = View.INVISIBLE
-        Count_Down_Button3.visibility = View.INVISIBLE
-        Count_Down_Button4.visibility = View.INVISIBLE
+        Timer().scheduleAtFixedRate(TimerCallback(), 0, 1000)
+
+        Log.d("uztest", "ButtonN clearance start")
+        for (i in 0..5){
+            ButtonA[i].visibility = View.INVISIBLE
+            ButtonB[i].visibility = View.INVISIBLE
+            ButtonC[i].visibility = View.INVISIBLE
+            ButtonD[i].visibility = View.INVISIBLE
+        }
+
+        Log.d("uztest","ButtonN cleared")
     }
 
-    inner class TimerCallback3 : TimerTask() {
+    inner class TimerCallback : TimerTask() {
         var i:Int = 0
+        var idx:Int = 0
 
         override fun run() {
             mainHandler.post(Runnable {
-                if (timerswitch[0] == 1) {
-                    if (timerstopsw[0]==0) {timeremaining[0] -= 1}
 
-                    Title1.text = timername[0].toString()
-                    var timet : timedata = timetransfer(timertime[0]!!)
-                    TimerTime1.text = "${timet.hour}:${timet.minites}:${timet.second}"
-                    timet = timetransfer(timeremaining[0])
-                    Count_Label1.text = "${timet.hour}:${timet.minites}:${timet.second}"
-                    Count_Down_Button1.visibility = View.INVISIBLE
+            for (idx in 0..5){
 
-                    Title1.visibility=View.VISIBLE
-                    TimerTime1.visibility=View.VISIBLE
-                    Count_Label1.visibility=View.VISIBLE
+                if (timerswitch[idx] == 1) {
+                    if (timerstopsw[idx]==0) {timeremaining[idx] -= 1}
 
-                    Count_Down_Button2.text="停止"
-                    Count_Down_Button2.visibility=View.VISIBLE
-                    Count_Down_Button3.text="再開"
-                    Count_Down_Button3.visibility=View.VISIBLE
-                    Count_Down_Button4.text="終了"
-                    Count_Down_Button4.visibility=View.VISIBLE
+                    TitleN[idx].text = timername[idx].toString()
+                    var timet : timedata = timetransfer(timertime[idx]!!)
+                    TimerTimeN[idx].text = "${timet.hour}:${timet.minites}:${timet.second}"
+                    timet = timetransfer(timeremaining[idx])
+                    Count_LabelN[idx].text = "${timet.hour}:${timet.minites}:${timet.second}"
+                    ButtonA[idx].visibility = View.INVISIBLE
 
-                    Count_Down_Button2.setOnClickListener{
-                        timerstopsw[0] = 1
+                    //indexOf(値)　で値が０のtimerswitch[]の引数を得る
+                    //値がないときは-1が入る
+
+                    TitleN[idx].visibility=View.VISIBLE
+                    TimerTimeN[idx].visibility=View.VISIBLE
+                    Count_LabelN[idx].visibility=View.VISIBLE
+
+                    ButtonB[idx].text="停止"
+                    ButtonB[idx].visibility=View.VISIBLE
+                    ButtonC[idx].text="再開"
+                    ButtonC[idx].visibility=View.VISIBLE
+                    ButtonD[idx].text="終了"
+                    ButtonD[idx].visibility=View.VISIBLE
+
+                    ButtonB[idx].setOnClickListener{
+                        timerstopsw[idx] = 1
                     }
 
-                    Count_Down_Button3.setOnClickListener{
-                        timerstopsw[0] = 0
+                    ButtonC[idx].setOnClickListener{
+                        timerstopsw[idx] = 0
                     }
 
-                    Count_Down_Button4.setOnClickListener{
-                        timerswitch[0] = -1
+                    ButtonD[idx].setOnClickListener{
+                        timerswitch[idx] = -1
                     }
 
-                    var timem : timedata = timetransfer(timeremaining[0])
-                    Count_Label1.text = "${timem.hour}:${timem.minites}:${timem.second}"
+                    var timem : timedata = timetransfer(timeremaining[idx])
+                    Count_LabelN[idx].text = "${timem.hour}:${timem.minites}:${timem.second}"
 
-                    if (timeremaining[0] == 0) Endingoperation()
+                    if (timeremaining[idx] == 0) Endingoperation()
                 }
-                else if (timerswitch[0] == -1) {
-                    Count_Down_Button2.visibility = View.INVISIBLE
-                    Count_Down_Button3.visibility = View.INVISIBLE
-                    Count_Down_Button4.visibility = View.INVISIBLE
-                    Title1.visibility = View.INVISIBLE
-                    TimerTime1.visibility = View.INVISIBLE
-                    Count_Label1.visibility = View.INVISIBLE
-                    timerswitch[0] = 0
+                else if (timerswitch[idx] == -1) {
+                    ButtonB[idx].visibility = View.INVISIBLE
+                    ButtonC[idx].visibility = View.INVISIBLE
+                    ButtonD[idx].visibility = View.INVISIBLE
+                    TitleN[idx].visibility = View.INVISIBLE
+                    TimerTimeN[idx].visibility = View.INVISIBLE
+                    Count_LabelN[idx].visibility = View.INVISIBLE
+                    timerswitch[idx] = 0
                 }
-                else if (timerswitch[0] == -2) {
-                    timerswitch[0] = 0
+                else if (timerswitch[idx] == -2) {
+                    timerswitch[idx] = 0
                 }
             }
+        }
                 )
         }
 
         fun Endingoperation(){
-            timerswitch[0] = -2
-            Count_Down_Button2.visibility = View.INVISIBLE
-            Count_Down_Button3.visibility = View.INVISIBLE
-            Count_Down_Button4.visibility = View.INVISIBLE
+            timerswitch[idx] = -2
+            ButtonB[idx].visibility = View.INVISIBLE
+            ButtonC[idx].visibility = View.INVISIBLE
+            ButtonD[idx].visibility = View.INVISIBLE
 
-            Count_Down_Button1.visibility = View.VISIBLE
+            ButtonA[idx].visibility = View.VISIBLE
 
-            Count_Down_Button1.text = "終了"
-            Count_Down_Button1.isEnabled = true
-            Count_Label1.text = "0"
+            ButtonA[idx].text = "終了"
+            ButtonA[idx].isEnabled = true
+            Count_LabelN[idx].text = "0"
+
+            TitleN[idx].setTextColor(Color.rgb(255,0,0))
 
             val audioAttributes = AudioAttributes.Builder()
                     // USAGE_MEDIA
@@ -146,13 +190,13 @@ class MainActivity : AppCompatActivity()  {
 
             warningSound = soundPool.load(this@MainActivity, R.raw.warningsound, 1)
 
-            Count_Down_Button1.setOnClickListener {
+            ButtonA[idx].setOnClickListener {
                 soundPool.stop(warningSound)
-                Count_Down_Button1.text = " "
-                Count_Down_Button1.isEnabled = false
-                Count_Down_Button1.visibility = View.INVISIBLE
-                Count_Label1.text = " "
-                timerswitch[0] = 0
+                ButtonA[idx].text = " "
+                ButtonA[idx].isEnabled = false
+                ButtonA[idx].visibility = View.INVISIBLE
+                Count_LabelN[idx].text = " "
+                timerswitch[idx] = 0
             }
 
             Thread.sleep(500)
@@ -193,12 +237,15 @@ class MainActivity : AppCompatActivity()  {
                 var recievemenu: String = data!!.getStringExtra("menu")!!
                 var recievetime: String = data!!.getStringExtra("time")!!
 
-                timerswitch[0] = 1
-                timername[0] = recievemenu.toString()
-                timertime[0] = recievetime.toInt()
+                availabeN = timerswitch.indexOf(0)
 
-                timeremaining[0] = timertime[0]!!
+                if (availabeN != -1) {
+                    timerswitch[availabeN] = 1
+                    timername[availabeN] = recievemenu.toString()
+                    timertime[availabeN] = recievetime.toInt()
 
+                    timeremaining[availabeN] = timertime[availabeN]!!
+                }
             }
         }
     }
