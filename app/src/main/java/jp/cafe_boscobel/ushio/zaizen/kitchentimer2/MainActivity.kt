@@ -2,15 +2,19 @@ package jp.cafe_boscobel.ushio.zaizen.kitchentimer2
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.graphics.Path
 import android.media.AudioAttributes
 import android.media.SoundPool
 import android.os.*
+import android.provider.DocumentsContract
 import android.util.Log
 import android.view.MenuItem
+import android.view.SoundEffectConstants
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.graphics.PathParser
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.*
 
@@ -53,7 +57,11 @@ class MainActivity : AppCompatActivity()  {
     lateinit var TimerTimeN: Array<TextView>
     lateinit var Count_LabelN: Array<TextView>
 
+    lateinit var WarningSound: Array<SoundPool>
+
     var availabeN: Int = 0
+
+    lateinit var audioAttributes: AudioAttributes
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -68,7 +76,28 @@ class MainActivity : AppCompatActivity()  {
         TimerTimeN = arrayOf(TimerTime1, TimerTime2, TimerTime3, TimerTime4, TimerTime5, TimerTime6)
         Count_LabelN = arrayOf(Count_Label1, Count_Label2, Count_Label3, Count_Label4, Count_Label5, Count_Label6)
 
-        Log.d("uztest", "phase 00")
+
+        audioAttributes = AudioAttributes.Builder()
+                // USAGE_MEDIA
+                // USAGE_GAME
+                .setUsage(AudioAttributes.USAGE_ALARM)
+                // CONTENT_TYPE_MUSIC
+                // CONTENT_TYPE_SPEECH, etc.
+                .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                .build()
+
+        soundPool = SoundPool.Builder()
+                .setAudioAttributes(audioAttributes)
+                // ストリーム数に応じて
+                .setMaxStreams(6)
+                .build()
+
+        warningSound[0] = soundPool.load(this@MainActivity,R.raw.warningsound1 , 1)
+        warningSound[1] = soundPool.load(this@MainActivity,R.raw.warningsound2, 1)
+        warningSound[2] = soundPool.load(this@MainActivity,R.raw.warningsound3 , 1)
+        warningSound[3] = soundPool.load(this@MainActivity,R.raw.warningsound4, 1)
+        warningSound[4] = soundPool.load(this@MainActivity,R.raw.warningsound5 , 1)
+        warningSound[5] = soundPool.load(this@MainActivity,R.raw.warningsound6, 1)
 
         mainHandler = Handler(Looper.getMainLooper())
 
@@ -91,8 +120,9 @@ class MainActivity : AppCompatActivity()  {
             ButtonD[i].visibility = View.INVISIBLE
         }
 
-        Log.d("uztest", "ButtonN cleared")
     }
+
+
 
     inner class TimerCallback : TimerTask() {
         var i:Int = 0
@@ -173,25 +203,9 @@ class MainActivity : AppCompatActivity()  {
             val oldColors: ColorStateList = TitleN[idx].getTextColors()
             TitleN[idx].setTextColor(Color.rgb(255, 0, 0))
 
-                    val audioAttributes = AudioAttributes.Builder()
-                    // USAGE_MEDIA
-                    // USAGE_GAME
-                    .setUsage(AudioAttributes.USAGE_GAME)
-                    // CONTENT_TYPE_MUSIC
-                    // CONTENT_TYPE_SPEECH, etc.
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
-                    .build()
-
-            soundPool = SoundPool.Builder()
-                    .setAudioAttributes(audioAttributes)
-                    // ストリーム数に応じて
-                    .setMaxStreams(2)
-                    .build()
-
-            warningSound[idx] = soundPool.load(this@MainActivity, R.raw.warningsound, 1)
-
             ButtonA[idx].setOnClickListener {
                 soundPool.stop(warningSound[idx])
+                Log.d("uztest", "idx=${idx}"+" ${warningSound[idx]}")
                 ButtonA[idx].text = " "
                 ButtonA[idx].isEnabled = false
                 ButtonA[idx].visibility = View.INVISIBLE
@@ -200,11 +214,13 @@ class MainActivity : AppCompatActivity()  {
                 timerswitch[idx] = 0
             }
 
-            Thread.sleep(500)
+//            Thread.sleep(500)
             soundPool.play(warningSound[idx], 1.0f, 1.0f, 0, -1, 1.0f)
         }
 
         }
+
+
 
     fun timetransfer(timesecond: Int):timedata{
         var hh:Int = 0
