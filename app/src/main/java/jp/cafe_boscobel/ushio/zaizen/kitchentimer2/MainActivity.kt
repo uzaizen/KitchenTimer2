@@ -1,20 +1,17 @@
 package jp.cafe_boscobel.ushio.zaizen.kitchentimer2
+import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
-import android.graphics.Path
 import android.media.AudioAttributes
 import android.media.SoundPool
 import android.os.*
-import android.provider.DocumentsContract
 import android.util.Log
 import android.view.MenuItem
-import android.view.SoundEffectConstants
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.graphics.PathParser
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.*
 
@@ -32,7 +29,13 @@ import java.util.*
 
 data class timedata(var hour: Int, var minites: Int, var second: Int)
 
-class MainActivity : AppCompatActivity()  {
+private lateinit var soundPool: SoundPool
+var warningSound = arrayOf<Int>(0, 0, 0, 0, 0, 0)
+var streamdid = arrayOf<Int>(0,0,0,0,0,0)
+lateinit var audioAttributes: AudioAttributes
+
+
+class MainActivity : AppCompatActivity() {
 
     val REQUESTCODE = 1
     var timerswitch = arrayOf<Int>(0, 0, 0, 0, 0, 0)
@@ -41,14 +44,12 @@ class MainActivity : AppCompatActivity()  {
     var timeremaining = arrayOf<Int>(0, 0, 0, 0, 0, 0)
     var timerstopsw = arrayOf<Int>(0, 0, 0, 0, 0, 0)
 
-    private var mtime:timedata? = null
+    private var mtime: timedata? = null
 
-    private lateinit var mainHandler : Handler
+    private lateinit var mainHandler: Handler
+    private lateinit var subThreadHandler: Handler
 
-    private lateinit var soundPool: SoundPool
-    private var warningSound = arrayOf<Int> (0,0,0,0,0,0)
-
-    lateinit var ButtonA:Array<Button>
+    lateinit var ButtonA: Array<Button>
     lateinit var ButtonB: Array<Button>
     lateinit var ButtonC: Array<Button>
     lateinit var ButtonD: Array<Button>
@@ -57,15 +58,15 @@ class MainActivity : AppCompatActivity()  {
     lateinit var TimerTimeN: Array<TextView>
     lateinit var Count_LabelN: Array<TextView>
 
-    lateinit var WarningSound: Array<SoundPool>
-
     var availabeN: Int = 0
-
-    lateinit var audioAttributes: AudioAttributes
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        mainHandler = Handler(Looper.getMainLooper())
+        val subThread = SubThread(mainHandler)
+        subThread.start()
 
         ButtonA = arrayOf(Count_Down_ButtonA1, Count_Down_ButtonA2, Count_Down_ButtonA3, Count_Down_ButtonA4, Count_Down_ButtonA5, Count_Down_ButtonA6)
         ButtonB = arrayOf(Count_Down_ButtonB1, Count_Down_ButtonB2, Count_Down_ButtonB3, Count_Down_ButtonB4, Count_Down_ButtonB5, Count_Down_ButtonB6)
@@ -77,56 +78,26 @@ class MainActivity : AppCompatActivity()  {
         Count_LabelN = arrayOf(Count_Label1, Count_Label2, Count_Label3, Count_Label4, Count_Label5, Count_Label6)
 
 
-        audioAttributes = AudioAttributes.Builder()
-                // USAGE_MEDIA
-                // USAGE_GAME
-                .setUsage(AudioAttributes.USAGE_ALARM)
-                // CONTENT_TYPE_MUSIC
-                // CONTENT_TYPE_SPEECH, etc.
-                .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
-                .build()
-
-        soundPool = SoundPool.Builder()
-                .setAudioAttributes(audioAttributes)
-                // ストリーム数に応じて
-                .setMaxStreams(6)
-                .build()
-
-        warningSound[0] = soundPool.load(this@MainActivity,R.raw.warningsound1 , 1)
-        warningSound[1] = soundPool.load(this@MainActivity,R.raw.warningsound2, 1)
-        warningSound[2] = soundPool.load(this@MainActivity,R.raw.warningsound3 , 1)
-        warningSound[3] = soundPool.load(this@MainActivity,R.raw.warningsound4, 1)
-        warningSound[4] = soundPool.load(this@MainActivity,R.raw.warningsound5 , 1)
-        warningSound[5] = soundPool.load(this@MainActivity,R.raw.warningsound6, 1)
-
-        mainHandler = Handler(Looper.getMainLooper())
-
-        Log.d("uztest", "phase 0")
-
         fab.setOnClickListener { view ->
             val intent = Intent(this@MainActivity, MenuSelectionActivity::class.java)
             startActivityForResult(intent, REQUESTCODE)
         }
 
-        Log.d("uztest", "phase1")
-
         Timer().scheduleAtFixedRate(TimerCallback(), 0, 1000)
 
-        Log.d("uztest", "ButtonN clearance start")
-        for (i in 0..5){
+        for (i in 0..5) {
             ButtonA[i].visibility = View.INVISIBLE
             ButtonB[i].visibility = View.INVISIBLE
             ButtonC[i].visibility = View.INVISIBLE
             ButtonD[i].visibility = View.INVISIBLE
         }
 
+        Thread.sleep(100)
+        subThreadHandler = subThread.getHandler()!!  //It has timing problem.  Need to put late part of the block
     }
 
 
-
     inner class TimerCallback : TimerTask() {
-        var i:Int = 0
-        var idx:Int = 0
 
         override fun run() {
             mainHandler.post(Runnable {
@@ -186,9 +157,10 @@ class MainActivity : AppCompatActivity()  {
                 }
             }
             )
+
         }
 
-        fun Endingoperation(idx: Int){
+        fun Endingoperation(idx: Int) {
             timerswitch[idx] = -2
             ButtonB[idx].visibility = View.INVISIBLE
             ButtonC[idx].visibility = View.INVISIBLE
@@ -203,9 +175,11 @@ class MainActivity : AppCompatActivity()  {
             val oldColors: ColorStateList = TitleN[idx].getTextColors()
             TitleN[idx].setTextColor(Color.rgb(255, 0, 0))
 
+            sendMessage(subThreadHandler, idx, 1)
+
             ButtonA[idx].setOnClickListener {
-                soundPool.stop(warningSound[idx])
-                Log.d("uztest", "idx=${idx}"+" ${warningSound[idx]}")
+                sendMessage(subThreadHandler, idx, 2)
+//                soundPool.stop(warningSound[idx])
                 ButtonA[idx].text = " "
                 ButtonA[idx].isEnabled = false
                 ButtonA[idx].visibility = View.INVISIBLE
@@ -213,24 +187,30 @@ class MainActivity : AppCompatActivity()  {
                 TitleN[idx].setTextColor(oldColors)
                 timerswitch[idx] = 0
             }
-
-//            Thread.sleep(500)
-            soundPool.play(warningSound[idx], 1.0f, 1.0f, 0, -1, 1.0f)
         }
 
+        private fun sendMessage(distHandler: Handler, TimerNumber: Int, OnOffSw: Int) {
+            val msg = distHandler.obtainMessage(SubThreadHandler.MSG_SUB_THREAD_HANDLER1)
+            msg.obj = MessageData(TimerNumber, OnOffSw)
+
+            Log.d("uztest", "sendMessage ${TimerNumber},${OnOffSw}")
+
+            distHandler.sendMessage(msg)
         }
 
+    }
 
 
-    fun timetransfer(timesecond: Int):timedata{
-        var hh:Int = 0
-        var mm:Int = 0
-        var ss:Int = 0
+    fun timetransfer(timesecond: Int): timedata {
+        var hh: Int = 0
+        var mm: Int = 0
+        var ss: Int = 0
         ss = timesecond % 60
         mm = timesecond / 60
         hh = timesecond / 60 / 60
         mtime = timedata(hh, mm, ss)
-        return mtime!! }
+        return mtime!!
+    }
 
 
     // 戻るボタンの処理
@@ -248,7 +228,6 @@ class MainActivity : AppCompatActivity()  {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
-        Log.d("uztest", "result returned")
         if (requestCode == REQUESTCODE) {
             if (RESULT_OK == resultCode) {
                 var recievemenu: String = data!!.getStringExtra("menu")!!
@@ -258,7 +237,7 @@ class MainActivity : AppCompatActivity()  {
 
                 if (availabeN != -1) {
                     timerswitch[availabeN] = 1
-                    timername[availabeN] = recievemenu.toString()
+                    timername[availabeN] = recievemenu
                     timertime[availabeN] = recievetime.toInt()
 
                     timeremaining[availabeN] = timertime[availabeN]!!
@@ -267,17 +246,17 @@ class MainActivity : AppCompatActivity()  {
         }
     }
 
-    override fun onStart(){
+    override fun onStart() {
         super.onStart()
         Log.d("uztest", "onStart")
     }
 
-    override fun onResume () {
+    override fun onResume() {
         super.onResume()
         Log.d("uztest", "onResume")
     }
 
-    override fun onPause(){
+    override fun onPause() {
         super.onPause()
         Log.d("uztest", "onPause")
     }
@@ -287,10 +266,87 @@ class MainActivity : AppCompatActivity()  {
         Log.d("uztest", "onStop")
     }
 
-    override fun onDestroy(){
+    override fun onDestroy() {
         super.onDestroy()
         Log.d("uztest", "onDestroy")
     }
 
 
-}
+    data class MessageData(val TimerNumber: Int, val OnOffSw: Int)
+
+    inner class SubThread(private val mainHandler: Handler) : Thread() {
+
+        private var subHandler: SubThreadHandler? = null
+
+        override fun run() {
+            try {
+                Looper.prepare()
+                subHandler = SubThreadHandler()
+//                Looper.loop()
+            } catch (e: InterruptedException) {
+                currentThread().interrupt()
+            }
+
+            audioAttributes = AudioAttributes.Builder()
+                    // USAGE_MEDIA
+                    // USAGE_GAME
+                    .setUsage(AudioAttributes.USAGE_ALARM)
+                    // CONTENT_TYPE_MUSIC
+                    // CONTENT_TYPE_SPEECH, etc.
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                    .build()
+
+            soundPool = SoundPool.Builder()
+                    .setAudioAttributes(audioAttributes)
+                    // ストリーム数に応じて
+                    .setMaxStreams(6)
+                    .build()
+
+            val con: Context = getApplicationContext()
+
+            warningSound[0] = soundPool.load(con, R.raw.warningsound1, 1)
+            warningSound[1] = soundPool.load(con, R.raw.warningsound2, 1)
+            warningSound[2] = soundPool.load(con, R.raw.warningsound3, 1)
+            warningSound[3] = soundPool.load(con, R.raw.warningsound4, 1)
+            warningSound[4] = soundPool.load(con, R.raw.warningsound5, 1)
+            warningSound[5] = soundPool.load(con, R.raw.warningsound6, 1)
+
+            Looper.loop()
+
+        }
+
+        fun getHandler(): Handler? {
+        Log.d("uztest","subHandler=${subHandler}")
+            return (subHandler)
+        }
+    }
+
+
+    class SubThreadHandler() : Handler(Looper.myLooper()!!) {
+       companion object { val MSG_SUB_THREAD_HANDLER1 = 1
+       var soundsw =0}
+
+        override fun handleMessage(msg: Message) {
+            when (msg.what) {
+                MSG_SUB_THREAD_HANDLER1 -> {
+                    val inData1: Int = (msg.obj as MessageData).TimerNumber
+                    val inData2: Int = (msg.obj as MessageData).OnOffSw
+
+                    if (inData2 == 1){
+                        streamdid[inData1]=soundPool.play(warningSound[1], 1.0f, 1.0f, 0, -1, 1.0f)
+                    }
+
+                    if (inData2 == 2){
+                        soundPool.stop(streamdid[inData1])
+                    }
+
+                    }
+                }
+            }
+
+        }
+    }
+
+
+
+
