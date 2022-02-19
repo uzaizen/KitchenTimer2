@@ -205,9 +205,10 @@ class MainActivity : AppCompatActivity() {
         var hh: Int = 0
         var mm: Int = 0
         var ss: Int = 0
-        ss = timesecond % 60
-        mm = timesecond / 60
-        hh = timesecond / 60 / 60
+        var time: Int = timesecond
+        hh = time / 60 / 60
+        mm = (time-(hh*60*60)) / 60
+        ss = time % 60
         mtime = timedata(hh, mm, ss)
         return mtime!!
     }

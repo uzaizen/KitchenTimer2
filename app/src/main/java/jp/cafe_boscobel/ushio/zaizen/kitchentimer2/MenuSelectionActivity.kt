@@ -60,9 +60,11 @@ class MenuSelectionActivity : AppCompatActivity() {
         menuList.add(menu)
         menu = mutableMapOf("name" to "ゆで卵", "time" to 13)
         menuList.add(menu)
-        menu = mutableMapOf("name" to "ピザ", "time" to 5)
+        menu = mutableMapOf("name" to "ピザオーブン", "time" to 5)
         menuList.add(menu)
         menu = mutableMapOf("name" to "サーモン焼", "time" to 5)
+        menuList.add(menu)
+        menu = mutableMapOf("name" to "キッシュオーブン", "time" to 2)
         menuList.add(menu)
         menu = mutableMapOf("name" to "1分", "time" to 1)
         menuList.add(menu)
@@ -72,7 +74,9 @@ class MenuSelectionActivity : AppCompatActivity() {
 
     private fun createSeikaList(): MutableList<MutableMap<String, Any>> {
         val menuList: MutableList<MutableMap<String, Any>> = mutableListOf()
-        var menu = mutableMapOf<String, Any>("name" to "クッキー", "time" to 8)
+        var menu = mutableMapOf<String, Any>("name" to "コーヒー", "time" to 4)
+        menuList.add(menu)
+        menu = mutableMapOf("name" to "クッキー","time" to 8)
         menuList.add(menu)
         menu = mutableMapOf("name" to "チーズケーキ", "time" to 45)
         menuList.add(menu)
